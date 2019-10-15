@@ -2,177 +2,193 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>  
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
 #include "client.h"
 #include "bmp.h"
+#include "json.h"
 
 /* @brief
  * envoi et reception de message
  * envoi et reception de nom du client
  * envoi de l'opération et reception du resultat
  * envoi de couleurs et reception de confirmation
- * 
+ *
  * @params
  * socketfd : Socket pour communiquer avec le serveur.
  * type : Spécifie quelle fonction lancer (message, nom, calcule ou couleurs).
- * 
+ *
  * @return
  * 0 si tout va bien ou -1 en cas d'erreur.
  */
 int envoie_recois_message(
-  int 	socketfd, 
-  char 	*type
-) {
-  if(	strcmp(type, "message") != 0 &&
-	strcmp(type, "nom") 	!= 0 &&
-	strcmp(type, "calcule") != 0 &&
-	strcmp(type, "couleurs") != 0
-    ) {
+  int 	socketfd,
+  char 	*type,
+  char  *pathname
+){
+  if(	strcmp(type, "message")  != 0 &&
+    	strcmp(type, "nom") 	   != 0 &&
+    	strcmp(type, "calcule")  != 0 &&
+    	strcmp(type, "couleurs") != 0 ){
     printf("Type inconnue\n");
     return 0;
-    
+
   } /* Check if type is correct */
-  
+
   if(strcmp(type, "couleurs") == 0){
-    return envoie_couleurs_simple(socketfd);
-    
+    if(pathname == NULL){
+	     printf("Vous devez spécifier une image.\n");
+       return 0;
+
+    }
+    return envoie_couleurs(socketfd, pathname);
+
   } /* Check if type is couleurs */
-  
-  char 	data[1024],
-	message[100];
-  int 	write_status,
-	read_status;
-	
-  memset(data, 0, sizeof(data));
-  printf("Votre %s (max 1000 caracteres): ", type);
-  fgets(message, 1024, stdin);
-  
-  /* Concatenate the type with the message to send to the serveur */
-  strcpy(data, type);
-  strcat(data, ": ");
-  strcat(data, message);
-  
+
+  char         data[DATA_SIZE],
+	             message[VALEURS_SIZE];
+  int          write_status,
+	             read_status;
+  message_json *json;
+
+  if( strcmp(type, "message") == 0 ||
+      strcmp(type, "nom")     == 0 ){
+    json = new_message_json(1);
+    strcpy(json->code, type);
+    printf("Votre %s (max %d caracteres): ", type, VALEURS_SIZE);
+    fgets(json->valeurs[0], VALEURS_SIZE, stdin);
+    create_message_json(data, json);
+    delete_message_json(json);
+
+  } else {
+    json = new_message_json(3);
+    strcpy(json->code, type);
+    printf("Votre opérateur du %s (max %d caracteres): ", type, VALEURS_SIZE);
+    fgets(json->valeurs[0], VALEURS_SIZE, stdin);
+    json->valeurs[0][strcspn(json->valeurs[0], "\n")] = 0;
+    printf("Votre premier nombre du %s (max %d caracteres): ", type, VALEURS_SIZE);
+    fgets(json->valeurs[1], VALEURS_SIZE, stdin);
+    json->valeurs[1][strcspn(json->valeurs[1], "\n")] = 0;
+    printf("Votre second nombre du %s (max %d caracteres): ", type, VALEURS_SIZE);
+    fgets(json->valeurs[2], VALEURS_SIZE, stdin);
+    json->valeurs[2][strcspn(json->valeurs[2], "\n")] = 0;
+    printf("%s", json->valeurs[2]);
+    create_message_json(data, json);
+    delete_message_json(json);
+
+  }
+
   write_status = write(socketfd, data, strlen(data));
-  if ( write_status < 0 ) {
+  if(write_status < 0){
     perror("erreur ecriture");
     exit(EXIT_FAILURE);
-    
+
   } /* Error write */
 
   memset(data, 0, sizeof(data));
   read_status = read(socketfd, data, sizeof(data));
-  if ( read_status < 0 ) {
+  if(read_status < 0){
     perror("erreur lecture");
     return -1;
-    
+
   } /* Error read */
 
-  printf("Message recu: %s\n", data);
- 
+  printf("Message recu :\n");
+  message_json *json = create_object_json(data);
+  print_message_json(json);
+  delete_message_json(json);
+
   return 0;
-  
+
 } /* envoie_recois_message */
 
-/* @brief
- * envoi de couleurs et reception de confirmation
- * 
- * @params
- * socketfd : Socket pour communiquer avec le serveur.
- * 
- * @return
- * 0 si tout va bien ou -1 en cas d'erreur.
- */
-int envoie_couleurs_simple(
-  int socketfd
+void analyse(
+  char *pathname,
+  char *data
 ){
-  char 	data[1024],
-	message[100];
-  int 	n = 0;
-  
-  memset(data, 0, sizeof(data));
-  while(n <= 0 || n >= 30){
-    printf("Nombre de couleurs puis vos couleurs (max 1000 caracteres): ");
-    fgets(message, 1024, stdin);
-    
-    /* Check number of colors */
-    char number_c[10];
-    sscanf(message, "%s", number_c);
-    n = atoi(number_c);
-  
-  } /* while the user dont put a correct number */
-  
-  strcpy(data, "couleurs: ");
-  strcat(data, message);
-  
-  int write_status = write(socketfd, data, strlen(data));
-  if ( write_status < 0 ) {
-    perror("erreur ecriture");
-    exit(EXIT_FAILURE);
-    
-  } /* Error write */
-
-  memset(data, 0, sizeof(data));
-  int read_status = read(socketfd, data, sizeof(data));
-  if ( read_status < 0 ) {
-    perror("erreur lecture");
-    return -1;
-    
-  } /* Error read */
-
-  printf("Message recu: %s\n", data);
- 
-  return 0;
-  
-} /* envoie_couleurs_simple */
-
-void analyse(char *pathname, char *data) {
   //compte de couleurs
-  couleur_compteur *cc = analyse_bmp_image(pathname);
+  couleur_compteur  *cc   = analyse_bmp_image(pathname);
+  int 	            n     = -1,
+                    count;
+  message_json      *json;
+  char 	            number_c[10],
+                    temp_string[10];
 
-  int count;
-  strcpy(data, "couleurs: ");
-  char temp_string[10] = "10,";
-  if (cc->size < 10) {
-    sprintf(temp_string, "%d,", cc->size);
-  }
-  strcat(data, temp_string);
-  
-  //choisir 10 couleurs
-  for (count = 1; count < 11 && cc->size - count >0; count++) {
-    if(cc->compte_bit ==  BITS32) {
-      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size-count].c.rouge,cc->cc.cc32[cc->size-count].c.vert,cc->cc.cc32[cc->size-count].c.bleu);
+  /* Ask the user how many colors */
+  while(n <= 0 || n >= 30){
+    printf("\nCombien de couleurs ? ");
+    fgets(number_c, 10, stdin);
+
+    /* Check number of colors */
+    n = atoi(number_c);
+
+  } /* while the user dont put a correct number */
+
+  json = new_message_json(n);
+  strcpy(json->code, "couleurs");
+
+  //choisir n couleurs
+  for (count = 1; count < (n + 1) && cc->size - count > 0; count++){
+
+    if(cc->compte_bit ==  BITS32){
+      sprintf(json->valeurs[count - 1], "#%02x%02x%02x", cc->cc.cc24[cc->size-count].c.rouge,cc->cc.cc32[cc->size-count].c.vert,cc->cc.cc32[cc->size-count].c.bleu);
+
     }
-    if(cc->compte_bit ==  BITS24) {
-      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc32[cc->size-count].c.rouge,cc->cc.cc32[cc->size-count].c.vert,cc->cc.cc32[cc->size-count].c.bleu);
+    if(cc->compte_bit ==  BITS24){
+      sprintf(json->valeurs[count - 1], "#%02x%02x%02x", cc->cc.cc32[cc->size-count].c.rouge,cc->cc.cc32[cc->size-count].c.vert,cc->cc.cc32[cc->size-count].c.bleu);
+
     }
-    strcat(data, temp_string);
+
   }
 
-  //enlever le dernier virgule
-  data[strlen(data)-1] = '\0';
+  create_message_json(data, json);
+  delete_message_json(json);
+
 }
 
-int envoie_couleurs(int socketfd, char *pathname) {
-  char data[1024];
+int envoie_couleurs(
+  int   socketfd,
+  char  *pathname
+){
+  char  data[DATA_SIZE];
+  int   write_status,
+        read_status;
   memset(data, 0, sizeof(data));
   analyse(pathname, data);
-  
-  int write_status = write(socketfd, data, strlen(data));
-  if ( write_status < 0 ) {
+
+  write_status = write(socketfd, data, strlen(data));
+  if(write_status < 0){
     perror("erreur ecriture");
     exit(EXIT_FAILURE);
+
   }
 
+  memset(data, 0, sizeof(data));
+  read_status = read(socketfd, data, sizeof(data));
+  if(read_status < 0){
+    perror("erreur lecture");
+    return -1;
+
+  } /* Error read */
+
+  printf("Message recu :\n");
+  message_json *json = create_object_json(data);
+  print_message_json(json);
+  delete_message_json(json);
+
   return 0;
+
 }
 
 
-int main(int argc, char **argv) {
-  int socketfd;
-  int bind_status;
+int main(
+  int   argc,
+  char  **argv
+){
+  int socketfd,
+      bind_status;
 
   struct sockaddr_in server_addr, client_addr;
 
@@ -180,9 +196,10 @@ int main(int argc, char **argv) {
    * Creation d'un socket
    */
   socketfd = socket(AF_INET, SOCK_STREAM, 0);
-  if ( socketfd < 0 ) {
+  if(socketfd < 0){
     perror("socket");
     exit(EXIT_FAILURE);
+
   }
 
   //détails du serveur (adresse et port)
@@ -193,22 +210,22 @@ int main(int argc, char **argv) {
 
   //demande de connection au serveur
   int connect_status = connect(socketfd, (struct sockaddr *) &server_addr, sizeof(server_addr));
-  if ( connect_status < 0 ) {
+  if(connect_status < 0){
     perror("connection serveur");
     exit(EXIT_FAILURE);
+
   }
-  
-  char 	type[50],
-	code[10];
-  /*printf("Quelle fonction lancer (message, nom, calcule ou couleurs): ");
-  fgets(type, 1024, stdin);
-  
+
+  char type[50],
+	     code[10];
+
+  printf("Quelle fonction lancer (message, nom, calcule ou couleurs): ");
+  fgets(type, DATA_SIZE, stdin);
+
   sscanf(type, "%s", code);
-  
-  envoie_recois_message(socketfd, code);*/
-  
-  envoie_couleurs(socketfd, argv[1]);
+
+  envoie_recois_message(socketfd, code, argv[1]);
 
   close(socketfd);
-  
+
 } /* main */

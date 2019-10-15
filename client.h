@@ -8,10 +8,8 @@
  * envoi de l'opération et reception du resultat
  * envoi de couleurs et reception de confirmation
  */
-int envoie_recois_message(int socketfd, char *type);
+int envoie_recois_message(int socketfd, char *type, char *pathname);
+int envoie_couleurs(int socketfd, char *pathname);
 
-/* envoi de couleurs et reception de confirmation
- */
-int envoie_couleurs_simple(int socketfd);
 
 #endif
