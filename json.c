@@ -160,7 +160,6 @@ message_json *create_object_json(
 
 }
 
-
 message_json *new_message_json(
   int nb_valeurs
 ){

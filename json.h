@@ -3,6 +3,7 @@
 
 #define VALEURS_SIZE 100
 #define DATA_SIZE 1024
+
 //Structure de données d'un message json
 typedef struct {
   char *code;
@@ -10,10 +11,25 @@ typedef struct {
   int nb_valeurs;
 } message_json;
 
-void create_message_json(char *data, message_json *json);
-message_json *new_message_json(int nb_valeurs);
-void delete_message_json(message_json *json);
-message_json *create_object_json(char *message);
-void print_message_json(message_json *json);
+void create_message_json(
+  char          *data,
+  message_json  *json
+);
+
+message_json *create_object_json(
+  char *message
+);
+
+message_json *new_message_json(
+  int nb_valeurs
+);
+
+void delete_message_json(
+  message_json *json
+);
+
+void print_message_json(
+  message_json *json
+);
 
 #endif

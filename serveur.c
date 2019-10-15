@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 #include "serveur.h"
-#include "json.h"
 
 int plot(
   int 	       client_socket_fd,
@@ -120,8 +119,7 @@ int renvoie_nom_client(
 int recois_numero_calcule(
   int 	       client_socket_fd,
   message_json *json
-)
-{
+){
   int 	        data_size;
   char 	        *operation    = json->valeurs[0],
                 save[DATA_SIZE];
@@ -249,7 +247,7 @@ int recois_envoie_message(
 
 }
 
-int main() {
+int main(){
 
   int socketfd,
       bind_status,

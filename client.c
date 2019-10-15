@@ -7,8 +7,6 @@
 #include <netinet/in.h>
 
 #include "client.h"
-#include "bmp.h"
-#include "json.h"
 
 /* @brief
  * envoi et reception de message
@@ -47,15 +45,14 @@ int envoie_recois_message(
 
   } /* Check if type is couleurs */
 
-  char         data[DATA_SIZE],
-	             message[VALEURS_SIZE];
-  int          write_status,
-	             read_status;
-  message_json *json;
+  char  data[DATA_SIZE],
+	      message[VALEURS_SIZE];
+  int   write_status,
+	      read_status;
 
   if( strcmp(type, "message") == 0 ||
       strcmp(type, "nom")     == 0 ){
-    json = new_message_json(1);
+    message_json *json = new_message_json(1);
     strcpy(json->code, type);
     printf("Votre %s (max %d caracteres): ", type, VALEURS_SIZE);
     fgets(json->valeurs[0], VALEURS_SIZE, stdin);
@@ -63,7 +60,7 @@ int envoie_recois_message(
     delete_message_json(json);
 
   } else {
-    json = new_message_json(3);
+    message_json *json = new_message_json(3);
     strcpy(json->code, type);
     printf("Votre opérateur du %s (max %d caracteres): ", type, VALEURS_SIZE);
     fgets(json->valeurs[0], VALEURS_SIZE, stdin);
@@ -217,7 +214,7 @@ int main(
   }
 
   char type[50],
-	     code[10];
+       code[10];
 
   printf("Quelle fonction lancer (message, nom, calcule ou couleurs): ");
   fgets(type, DATA_SIZE, stdin);
