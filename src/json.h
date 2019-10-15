@@ -15,7 +15,7 @@ typedef struct {
 } message_json;
 
 /* @brief
- * Creer un message au format json
+ * Creer un message au format JSON
  * a partir d'un objet message_json.
  */
 void create_message_json(
