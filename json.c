@@ -19,18 +19,27 @@ void create_message_json(
   int i = 0;
 
   memset(data, 0, sizeof(data));
+
+  /* First put the code */
   strcpy(data, "{\"code\" : \"");
+  /* Put the value of the code */
   strcat(data, json->code);
+
+  /* Then put the values */
   strcat(data, "\", \"valeurs\" : [");
   for(i; i < json->nb_valeurs; i++){
+    /* Put the value */
     strcat(data, "\"");
     strcat(data, json->valeurs[i]);
     strcat(data, "\"");
 
+    /* Don't put , the last iteration */
     if(i < json->nb_valeurs - 1)
       strcat(data, ", ");
 
-  }
+  } /* Foreach values */
+
+  /* Close the message */
   strcat(data, "]}");
 
 } /* create_message_json */
@@ -61,25 +70,29 @@ message_json *create_object_json(
         message[i - 4] == 'l' 	&&
         message[i - 5] == 'a' 	&&
         message[i - 6] == 'v' 	){
-      bool = 1;
-      //Dont get the "
-      i = i + 2;
+      bool  = 1;
+      /* Don't get the first " */
+      i     = i + 2;
 
-    }
+    } /* When find valeurs */
 
     if(bool != 0){
+      /* Count the number of " */
       if(message[i] == '"')
 	     compt++;
 
-    }
+    } /* When we are just after the valeurs */
 
     i++;
 
-  }
+  } /* Loop on the message */
 
+  /* There are 2 " for one value */
+  compt = compt / 2;
+
+  /* Create the object */
   message_json *json = new_message_json(compt);
 
-  compt = compt / 2;
   i 	  = 0;
   bool  = 0;
 
@@ -87,7 +100,7 @@ message_json *create_object_json(
         j           = 0;
   char  tmp[30];
 
-  // get the code
+  /* Get the code */
   while(message[i] != '\0'){
     if( i > 4	 		              &&
         message[i]     == 'e' 	&&
@@ -95,35 +108,39 @@ message_json *create_object_json(
         message[i - 2] == 'o' 	&&
         message[i - 3] == 'c' 	){
       bool  = 1;
+      /* Don't get the first " */
       i     = i + 2;
 
-    }
+    } /* When find code */
 
     if(bool != 0){
       if(message[i] == '"'){
 	       if(bool_string == 0){
 	          bool_string = 1;
 	           i++;
+
 	       } else {
-	          bool_string  = 0;
-	          tmp[j]       = '\0';
-            strcpy(json->code, tmp);
-	          break;
+           /* We finish to get the code */
+	         bool_string  = 0;
+	         tmp[j]       = '\0';
+           strcpy(json->code, tmp);
+	         break;
 
 	       }
 
-      }
+      } /* Know wich " is it */
 
       if(bool_string != 0){
 	       tmp[j] = message[i];
 	       j++;
-      }
 
-    }
+      } /* Save the value of the code */
+
+    } /* When we are just after code */
 
     i++;
 
-  }
+  } /* Loop on the message */
 
   i 	        = 0;
   bool 	      = 0;
@@ -131,7 +148,7 @@ message_json *create_object_json(
   j           = 0;
   compt       = 0;
 
-  // get the valeurs
+  /* Get the valeurs */
   while(message[i] != '\0'){
     if( i > 7	 		              &&
         message[i]     == 's' 	&&
@@ -141,38 +158,41 @@ message_json *create_object_json(
         message[i - 4] == 'l' 	&&
         message[i - 5] == 'a' 	&&
         message[i - 6] == 'v' 	){
-      //Dont get the "
+      /* Don't get the first " */
       i     = i + 2;
       bool  = 1;
 
-    }
+    } /* When find valeurs */
 
     if(bool != 0){
       if(message[i] == '"'){
 	       if(bool_string == 0){
 	          bool_string = 1;
 	          i++;
+
 	       } else {
-	          bool_string  = 0;
-	          tmp[j]       = '\0';
-	          strcpy(json->valeurs[compt], tmp);
-	          compt++;
-	          j = 0;
+           /* We finish to get the code */
+	         bool_string  = 0;
+	         tmp[j]       = '\0';
+	         strcpy(json->valeurs[compt], tmp);
+	         compt++;
+	         j = 0;
 
 	       }
 
-     }
+     } /* Know wich " is it */
 
      if(bool_string != 0){
 	      tmp[j] = message[i];
 	      j++;
-     }
 
-    }
+     } /* Save the value of the valeurs */
+
+   } /* When we are just after valeurs */
 
     i++;
 
-  }
+  } /* Loop on message */
 
   return json;
 
@@ -193,8 +213,10 @@ message_json *new_message_json(
   int           i     = 0;
   message_json  *json = calloc(1, sizeof(message_json));
 
+  /* Allocate memory */
   json->valeurs = calloc(10, sizeof(char **));
 
+  /* Foreach values */
   for(i; i < nb_valeurs; i++)
     json->valeurs[i] = malloc(VALEURS_SIZE * sizeof(char));
 
@@ -215,9 +237,14 @@ void delete_message_json(
   message_json *json
 ){
   int i = 0;
+
+  /* Desallocate memory */
   free(json->code);
+
+  /* Foreach values */
   for(i; i < json->nb_valeurs; i++)
     free(json->valeurs[i]);
+
   free(json->valeurs);
   free(json);
 
@@ -233,8 +260,12 @@ void print_message_json(
   message_json *json
 ){
   int i = 0;
+
+  /* Print the message */
   printf("code : %s\n", json->code);
   printf("%d valeurs :\n", json->nb_valeurs);
+
+  /* Foreach values */
   for(i; i < json->nb_valeurs; i++)
     printf("%s\n", json->valeurs[i]);
 

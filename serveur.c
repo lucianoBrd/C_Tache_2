@@ -32,6 +32,7 @@ int plot(
                 *tmp;
   message_json  *json_save;
 
+  /* Set parameters */
   fprintf(p, "set xrange [-15:15]\n");
   fprintf(p, "set yrange [-15:15]\n");
   fprintf(p, "set style fill transparent solid 0.9 noborder\n");
@@ -42,18 +43,20 @@ int plot(
       tmp = json->valeurs[i];
       tmp++;
 
-      // Le numéro : 360° (cercle) / num couleurs
+      /* Print the color and compute his position (with a cercle of 360°) */
       fprintf(p, "0 0 10 %lf %lf 0x%s\n", (float)(i)*(float)(360/(float)json->nb_valeurs), (float)(i + 1)*(float)(360/(float)json->nb_valeurs), tmp);
 
       /* Put the color into the file */
       fputs(json->valeurs[i], fp);
       fputs("\n", fp);
 
-  }
+  } /* Foreach colors */
 
   fprintf(p, "e\n");
   pclose(p);
   fclose(fp);
+
+  /* New object to create a message to return to the client */
   json_save = new_message_json(1);
 
   strcpy(json_save->code, "couleurs");
@@ -62,7 +65,7 @@ int plot(
   create_message_json(save, json_save);
   delete_message_json(json_save);
 
-  data_size = write (client_socket_fd, (void *) save, strlen(save));
+  data_size = write(client_socket_fd, (void *) save, strlen(save));
 
   if(data_size < 0){
     perror("erreur ecriture");
@@ -89,14 +92,15 @@ int renvoie_message(
   char  data[DATA_SIZE];
   int   data_size;
 
+  /* Create a message to return to the client */
   create_message_json(data, json);
-  data_size = write (client_socket_fd, (void *) data, strlen(data));
+  data_size = write(client_socket_fd, (void *) data, strlen(data));
 
   if(data_size < 0){
     perror("erreur ecriture");
     return(EXIT_FAILURE);
 
-  }
+  } /* Error write */
 
 } /* renvoie_message */
 
@@ -168,6 +172,7 @@ int recois_numero_calcule(
 
   }
 
+  /* New object to create a message to return to the client */
   json_save = new_message_json(1);
   strcpy(json_save->code, "calcule");
 
@@ -219,31 +224,34 @@ int recois_envoie_message(
                 data_size;
   message_json  *json;
 
-  // nouvelle connection de client
+  /* New connection of the client */
   client_socket_fd = accept(socketfd, (struct sockaddr *) &client_addr, &client_addr_len);
   if(client_socket_fd < 0 ){
     perror("accept");
     return(EXIT_FAILURE);
 
-  }
+  } /* Error accept */
 
   memset(data, 0, sizeof(data));
 
-  //lecture de données envoyées par un client
-  data_size = read (client_socket_fd, (void *) data, sizeof(data));
+  /* Read client data */
+  data_size = read(client_socket_fd, (void *) data, sizeof(data));
 
   if(data_size < 0){
     perror("erreur lecture");
     return(EXIT_FAILURE);
 
-  }
+  } /* Error read */
 
+  /* Print the message of the client */
   printf("Message recu :\n");
   json = create_object_json(data);
   print_message_json(json);
 
   if(strcmp(json->code, "message") == 0){
-    /* Si le message commence par le mot: 'message:' */
+    /* Case code 'message' */
+
+    /* Ask the user what message he wants to return to the client */
     message_json *json_return = new_message_json(1);
     printf("Votre message (max 100 caracteres): ");
     fgets(json_return->valeurs[0], VALEURS_SIZE, stdin);
@@ -253,21 +261,22 @@ int recois_envoie_message(
     renvoie_message(client_socket_fd, json_return);
 
   } else if(strcmp(json->code, "nom") == 0){
-    /* Si le message commence par le mot: 'nom:' */
+    /* Case code 'nom' */
     renvoie_nom_client(client_socket_fd, data);
 
   } else if(strcmp(json->code, "calcule") == 0){
-    /* Si le message commence par le mot: 'calcule:' */
+    /* Case code 'calcule' */
     recois_numero_calcule(client_socket_fd, json);
 
   } else if(strcmp(json->code, "couleurs") == 0){
-    /* Si le message commence par le mot: 'couleurs:' */
+    /* Case code 'couleurs' */
     /* Plot the image */
     plot(client_socket_fd, json);
 
   }
   delete_message_json(json);
-  //fermer le socket
+
+  /* Close the socket */
   close(socketfd);
 
 } /* recois_envoie_message */
@@ -284,9 +293,7 @@ int main(){
 
   struct sockaddr_in server_addr, client_addr;
 
-  /*
-   * Creation d'un socket
-   */
+  /* Create the socket */
   socketfd = socket(AF_INET, SOCK_STREAM, 0);
   if(socketfd < 0){
     perror("Unable to open a socket");
@@ -296,7 +303,7 @@ int main(){
 
   setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
-  //détails du serveur (adresse et port)
+  /* Put parameters */
   memset(&server_addr, 0, sizeof(server_addr));
   server_addr.sin_family      = AF_INET;
   server_addr.sin_port        = htons(PORT);
@@ -307,7 +314,7 @@ int main(){
     perror("bind");
     return(EXIT_FAILURE);
 
-  }
+  } /* Error bind */
 
   listen(socketfd, 10);
   recois_envoie_message(socketfd);
