@@ -4,6 +4,14 @@
 
 #include "json.h"
 
+/* @brief
+ * Creer un message au format json
+ * a partir d'un objet message_json.
+ *
+ * @params
+ * data : String ou l'on retourne le message JSON.
+ * json : Objet contenant les différents paramètres à mettre dans le message.
+ */
 void create_message_json(
   char          *data,
   message_json  *json
@@ -25,8 +33,18 @@ void create_message_json(
   }
   strcat(data, "]}");
 
-}
+} /* create_message_json */
 
+/* @brief
+ * Creer un objet message_json à partir d'un String
+ * au format JSON.
+ *
+ * @params
+ * message : Message JSON.
+ *
+ * @return
+ * Un nouveau message_json alloué en mémoire.
+ */
 message_json *create_object_json(
   char *message
 ){
@@ -158,8 +176,17 @@ message_json *create_object_json(
 
   return json;
 
-}
+} /* create_object_json */
 
+/* @brief
+ * Creer un objet message_json avec n valeurs.
+ *
+ * @params
+ * nb_valeurs : Nombre de valeurs de l'objet.
+ *
+ * @return
+ * Un nouveau message_json alloué en mémoire.
+ */
 message_json *new_message_json(
   int nb_valeurs
 ){
@@ -176,8 +203,14 @@ message_json *new_message_json(
 
   return json;
 
-}
+} /* new_message_json */
 
+/* @brief
+ * Supprimer un objet message_json.
+ *
+ * @params
+ * json : Objet à supprimer.
+ */
 void delete_message_json(
   message_json *json
 ){
@@ -188,8 +221,14 @@ void delete_message_json(
   free(json->valeurs);
   free(json);
 
-}
+} /* delete_message_json */
 
+/* @brief
+ * Affiche un objet message_json.
+ *
+ * @params
+ * json : Objet à afficher.
+ */
 void print_message_json(
   message_json *json
 ){
@@ -199,4 +238,4 @@ void print_message_json(
   for(i; i < json->nb_valeurs; i++)
     printf("%s\n", json->valeurs[i]);
 
-}
+} /* print_message_json */

@@ -9,6 +9,16 @@
 
 #include "serveur.h"
 
+/* @brief
+ * Affiche les couleurs sous forme de graphique.
+ *
+ * @params
+ * client_socket_fd : Socket du client.
+ * json : Objet contenant les couleurs.
+ *
+ * @return
+ * EXIT_FAILURE en cas d'erreur.
+ */
 int plot(
   int 	       client_socket_fd,
   message_json *json
@@ -60,9 +70,17 @@ int plot(
 
   } /* Error write */
 
-}
+} /* plot */
 
-/* renvoyer un message (*data) au client (client_socket_fd)
+/* @brief
+ * Renvoie un message JSON au client.
+ *
+ * @params
+ * client_socket_fd : Socket du client.
+ * json : Objet contenant le message.
+ *
+ * @return
+ * EXIT_FAILURE en cas d'erreur.
  */
 int renvoie_message(
   int           client_socket_fd,
@@ -80,14 +98,14 @@ int renvoie_message(
 
   }
 
-}
+} /* renvoie_message */
 
 /* @brief
- * renvoyer un message du nom (*data) au client (client_socket_fd)
+ * Renvoie un message JSON avec le nom du client.
  *
  * @params
  * client_socket_fd : Socket du client.
- * data : String contenant le message du client (nom).
+ * data : String contenant le message JSON.
  *
  * @return
  * EXIT_FAILURE en cas d'erreur.
@@ -107,11 +125,11 @@ int renvoie_nom_client(
 } /* renvoie_nom_client */
 
 /* @brief
- * renvoyer le resultat du calcul (*data) au client (client_socket_fd)
+ * Renvoie le resultat du calcule au client.
  *
  * @params
  * client_socket_fd : Socket du client.
- * data : String contenant le message du client (opérateur et nombres).
+ * json : Objet contenant les nombres et l'opérande du calcule.
  *
  * @return
  * EXIT_FAILURE en cas d'erreur.
@@ -179,10 +197,17 @@ int recois_numero_calcule(
 
 } /* recois_numero_calcule */
 
-/* accepter la nouvelle connection d'un client et lire les données
- * envoyées par le client. En suite, le serveur envoie un message
- * en retour
- */
+ /* @brief
+  * Accepter la nouvelle connection d'un client et lire les données
+  * envoyées par le client. En suite, le serveur envoie un message
+  * en retour.
+  *
+  * @params
+  * socketfd : Socket du client.
+  *
+  * @return
+  * 0 si tout va bien ou -1 en cas d'erreur.
+  */
 int recois_envoie_message(
   int socketfd
 ){
@@ -245,8 +270,11 @@ int recois_envoie_message(
   //fermer le socket
   close(socketfd);
 
-}
+} /* recois_envoie_message */
 
+/* @brief
+ * Main fonction.
+ */
 int main(){
 
   int socketfd,
@@ -286,4 +314,4 @@ int main(){
 
   return 0;
 
-}
+} /* main */

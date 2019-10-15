@@ -17,6 +17,7 @@
  * @params
  * socketfd : Socket pour communiquer avec le serveur.
  * type : Spécifie quelle fonction lancer (message, nom, calcule ou couleurs).
+ * pathname : Chemin de l'image à traiter.
  *
  * @return
  * 0 si tout va bien ou -1 en cas d'erreur.
@@ -101,6 +102,15 @@ int envoie_recois_message(
 
 } /* envoie_recois_message */
 
+/* @brief
+ * Analyse une image. Demande à l'utilisateur
+ * combien de couleurs il veut récupérer, puis,
+ * on stocke ces couleurs dans une string au format JSON.
+ *
+ * @params
+ * pathname : Chemin de l'image à traiter.
+ * data : String ou l'on stocke le message JSON.
+ */
 void analyse(
   char *pathname,
   char *data
@@ -143,8 +153,18 @@ void analyse(
   create_message_json(data, json);
   delete_message_json(json);
 
-}
+} /* analyse */
 
+/* @brief
+ * Envoie au serveur n couleurs.
+ *
+ * @params
+ * socketfd : Socket pour communiquer avec le serveur.
+ * pathname : Chemin de l'image à traiter.
+ *
+ * @return
+ * 0 si tout va bien ou -1 en cas d'erreur.
+ */
 int envoie_couleurs(
   int   socketfd,
   char  *pathname
@@ -177,9 +197,11 @@ int envoie_couleurs(
 
   return 0;
 
-}
+} /* envoie_couleurs */
 
-
+/* @brief
+ * Main fonction.
+ */
 int main(
   int   argc,
   char  **argv
